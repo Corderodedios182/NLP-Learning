@@ -82,12 +82,20 @@ with tf.io.TFRecordWriter("input_tfranking.tfrecords") as writer:
     example_features = ELWC.examples.add()
 
     example_dict = {}
-    example_dict["document_tokens"] = _bytes_feature([YOUR_DOCUMENT_TOKENS[0]])
-    example_dict["relevance"] = _int64_feature([YOUR_RELEVANCE_TOKENS[0]])
-    exampe_proto = tf.train.Example(features=tf.train.Features(feature=example_dict))
-    example_features.CopyFrom(exampe_proto)
+    
+    for example in YOUR_DOCUMENT_TOKENS:
         
-    writer.write(ELWC.SerializeToString())    
+        example_dict["document_tokens"] = _bytes_feature([example])
+        exampe_proto = tf.train.Example(features=tf.train.Features(feature=example_dict))
+        example_features.CopyFrom(exampe_proto)
+        
+    for relevance in YOUR_RELEVANCE_TOKENS:
+        
+        example_dict["relevance"] = _int64_feature([relevance])
+        exampe_proto = tf.train.Example(features=tf.train.Features(feature=example_dict))
+        example_features.CopyFrom(exampe_proto)
+
+        writer.write(ELWC.SerializeToString())    
 
 #Otra forma es aprovechar el constructor ExampleListWithContext y simplemente
 #pasarle el contexto tf.train.Example 
