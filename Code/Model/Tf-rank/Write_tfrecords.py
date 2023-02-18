@@ -14,7 +14,7 @@ datos = pd.read_csv('Data/Raw/tfrecords/datos_a_corregir.csv').loc[:,['QID','TEX
 datos['RANK'] = datos['RANK'].astype('int')
 datos.columns = ['qid','query_tokens','document_tokens','relevance']
 
-example = datos[datos["query_tokens"] == 'reunión seguridad']
+example = datos[datos["qid"] == 1]
 
 types = {'query_tokens': 'str',
          'document_tokens':'str',
@@ -82,8 +82,8 @@ with tf.io.TFRecordWriter("input_tfranking.tfrecords") as writer:
     example_features = ELWC.examples.add()
 
     example_dict = {}
-    example_dict["document_tokens"] = _bytes_feature(YOUR_DOCUMENT_TOKENS)
-    example_dict["relevance"] = _int64_feature(YOUR_RELEVANCE_TOKENS)
+    example_dict["document_tokens"] = _bytes_feature([YOUR_DOCUMENT_TOKENS[0]])
+    example_dict["relevance"] = _int64_feature([YOUR_RELEVANCE_TOKENS[0]])
     exampe_proto = tf.train.Example(features=tf.train.Features(feature=example_dict))
     example_features.CopyFrom(exampe_proto)
         
@@ -109,6 +109,6 @@ def read_and_print_tf_record(target_filename, num_of_examples_to_read):
         example_list_with_context.ParseFromString(raw_record.numpy())
         print(example_list_with_context)
 
-read_and_print_tf_record("input_tfranking.tfrecords", 1)
+read_and_print_tf_record("input_tfranking.tfrecords", 100)
 
 input_tfranking = tf.data.TFRecordDataset("input_tfranking.tfrecords")
