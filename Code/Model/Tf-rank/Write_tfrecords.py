@@ -70,25 +70,23 @@ YOUR_RELEVANCE_TOKENS = []
 
 with tf.io.TFRecordWriter("input_tfranking.tfrecords") as writer:
     
+    #CONTEXT
     context_dict = {}
-    context_dict["query_toknes"] = _bytes_feature(YOUR_QUERY_TOKENS)
+    context_dict["query_toknes"] = _bytes_feature([YOUR_QUERY_TOKENS[0]])
     context_proto = tf.train.Example(features=tf.train.Features(feature=context_dict))
          
     ELWC = input_pb2.ExampleListWithContext()
     ELWC.context.CopyFrom(context_proto)
-            
+    
+    #EXAMPLES AND RELEVANCE       
     example_features = ELWC.examples.add()
 
     example_dict = {}
     example_dict["document_tokens"] = _bytes_feature(YOUR_DOCUMENT_TOKENS)
+    example_dict["relevance"] = _int64_feature(YOUR_RELEVANCE_TOKENS)
     exampe_proto = tf.train.Example(features=tf.train.Features(feature=example_dict))
     example_features.CopyFrom(exampe_proto)
         
-    relevance_dict = {}
-    relevance_dict["relevance"] = _int64_feature(YOUR_RELEVANCE_TOKENS)
-    relevance_proto = tf.train.Example(features=tf.train.Features(feature=relevance_dict))
-    example_features.CopyFrom(relevance_proto)
-    
     writer.write(ELWC.SerializeToString())    
 
 #Otra forma es aprovechar el constructor ExampleListWithContext y simplemente
@@ -110,29 +108,7 @@ def read_and_print_tf_record(target_filename, num_of_examples_to_read):
         example_list_with_context = input_pb2.ExampleListWithContext()
         example_list_with_context.ParseFromString(raw_record.numpy())
         print(example_list_with_context)
-        
+
 read_and_print_tf_record("input_tfranking.tfrecords", 1)
 
-input_tfranking = tf_record_dataset = tf.data.TFRecordDataset("input_tfranking.tfrecords")
-
-import tensorflow_ranking as tfr
-
-def parse_elwc(elwc):
-  return tfr.data.parse_from_example_list(
-      [elwc],
-      list_size=2,
-      context_feature_spec={"query_tokens": tf.io.RaggedFeature(dtype=tf.string)},
-      example_feature_spec={
-          "document_tokens":
-              tf.io.RaggedFeature(dtype=tf.string),
-          "relevance":
-              tf.io.FixedLenFeature(shape=[], dtype=tf.int64, default_value=0)
-      },
-      size_feature_name="_list_size_",
-      mask_feature_name="_mask_")
-
-parse_elwc(input_tfranking)
-
-
-
-
+input_tfranking = tf.data.TFRecordDataset("input_tfranking.tfrecords")
